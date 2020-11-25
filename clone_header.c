@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 {
 	const char *src_file, *dst_file;
 	boot_img_hdr_t *src, *dst;
-	int name = true, version = true, cmd = false;
+	bool name = true, version = true, cmd = false, skip_check = false;
 
 	const char *opts = "nvc";
 
@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
 		{ "no-version", no_argument, NULL, -'v' },
 		{ "cmd",        no_argument, NULL, 'c' },
 		{ "no-cmd",     no_argument, NULL, -'c' },
+		{ "skip-check", no_argument, NULL, 's' },
 		{ "help",       no_argument, NULL, 'h' },
 		{ NULL, 0, NULL, 0 }
 	};
@@ -253,9 +254,14 @@ int main(int argc, char *argv[])
 		case -'c':
 			cmd = false;
 			break;
+		case 's':
+			skip_check = true;
+			break;
 		case 'h':
-			printf("Usage: %s [options] <srcimage> <dstimage>\n", argv[0]);
-			printf("Options: --[no-]name (enabled), --[no-]version (enabled), --[no-]cmd\n");
+			printf("Usage: %s [options] <srcimage> <dstimage>\n" \
+			       "Options: --[no-]name (enabled), --[no-]version (enabled), --[no-]cmd\n" \
+			       "         --skip-check to skip android boot image compatibility check\n",
+			       argv[0]);
 			return EXIT_SUCCESS;
 		case '?':
 			errx(1, "Unknown option");
@@ -279,7 +285,12 @@ int main(int argc, char *argv[])
 	print_header_info(dst);
 	puts("");
 
-	stopx(!check_headers_compatible(src, dst), "images are not compatible");
+	if (skip_check)
+		stopx(src->header_version != dst->header_version,
+		      "images are not compatible");
+	else
+		stopx(!check_headers_compatible(src, dst),
+		      "images are not compatible");
 
 	/* We don't need to update sha after these changes.
 	   Only kernel, ramdisk, second, recovery_dtbo, dtb fields

@@ -169,7 +169,7 @@ static bool check_headers_compatible(const boot_img_hdr_t *h1,
 #define ne(field) (h1->field != h2->field)
 #define ne_addr(field) \
 	(!((h1->field ## _addr == h2->field ## _addr) || \
-	   (h1->field ## _size == h2->field ## _size == 0)))
+	   ((h1->field ## _size == h2->field ## _size) && (h1->field ## _size == 0))))
 	if (
 	   !checkx(ne(header_version), "header_versions are not compatible")
 	&& !checkx(ne(kernel_addr), "kernels are not compatible")
